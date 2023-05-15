@@ -6,3 +6,9 @@ starlette
 flake8
 requests
 httpx
+SQLAlchemy
+pydantic
+python-dotenv
+alembic
+asyncpg
+redis

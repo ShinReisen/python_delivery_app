@@ -1,26 +1,57 @@
 version: "3.9"
 
 services:
-  app:
-    container_name: app
-    build: .
+  redis:
+    image: redis:alpine
+    container_name: redis
     ports:
-      - 8080:8080
-    restart: always
-    depends_on:
-      - db
-    links:
-      - db
+      - "6379:6379"
+    command: ["redis-server", "--bind", "redis", "--port", "6379"]
     networks:
       - enrollment
 
+  app:
+    container_name: app
+    build: .
+    env_file:
+      - .env_docker
+    ports:
+      - "8080:8080"
+    restart: always
+    depends_on:
+      - db
+      - redis
+    links:
+      - db
+      - redis
+    networks:
+      - enrollment
 
   db:
     container_name: db
     image: postgres:15.2-alpine
     restart: always
-    environment:
-      POSTGRES_PASSWORD: example
+    env_file:
+      - .env_docker
+    ports:
+      - "5432:5432"
+    networks:
+      - enrollment
+
+
+  alembic_migrations:
+    container_name: alembic_migrations
+    image: alembic_migrations
+    command: /app/bin/alembic upgrade head
+    depends_on:
+      - db
+    env_file:
+      - .env_docker
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
     networks:
       - enrollment
 
