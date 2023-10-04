@@ -1,4 +1,6 @@
 import redis.asyncio as redisac
+
+from app.database import prepare_database, Base
 from app.fastapi_limiter import FastAPILimiter
 from app.router import router
 from app.couriers.router import router as router_courier
@@ -8,7 +10,7 @@ from app.config import REDIS_HOST
 
 
 # инициализируем приложение
-app = FastAPI(title="Yandex Lavka")
+app = FastAPI(title="Fast delivery")
 
 # подключим основные/корневые эндпоинты
 app.include_router(router)
@@ -21,7 +23,10 @@ app.include_router(router_order)
 
 
 
+
 @app.on_event("startup")
 async def startup():
-   redis = redisac.from_url(f"redis://{REDIS_HOST}", encoding="utf-8", decode_responses=True)
-   await FastAPILimiter.init(redis)
+    # нужен редис из докер композ чтобы это работало
+    redis = redisac.from_url(f"redis://{REDIS_HOST}", encoding="utf-8", decode_responses=True)
+    await FastAPILimiter.init(redis)
+    prepare_database()
